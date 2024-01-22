@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather, Recipe, and Film App</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            text-align: center;
+            margin: 20px;
+            background-color: #f4f4f4;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        label {
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        input {
+            padding: 8px;
+            margin-right: 10px;
+        }
+
+        button {
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        #map, #recipeInfo, #filmInfo {
+            margin-top: 20px;
+        }
+
+        .recipe-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .recipe-card, .film-card {
+            max-width: 300px;
+            margin: 15px;
+            padding: 15px;
+            background-color: #fff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .recipe-card img, .film-card img {
+            max-width: 100%;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+
+        .recipe-card h3, .film-card h3 {
+            color: #333;
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+
+        .recipe-card p, .film-card p {
+            color: #555;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Weather, Recipe, and Film App</h1>
+    
+    <label for="cityInput">Enter City:</label>
+    <input type="text" id="cityInput" placeholder="Enter city name">
+    <button onclick="getWeather()">Get Weather</button>
+
+    <div id="weatherInfo"></div>
+    
+    <div id="map"></div>
+
+    <h2>Random Food Recipe</h2>
+    <button onclick="getRandomRecipe()">Get Random Recipe</button>
+    <div id="recipeInfo" class="recipe-container"></div>
+
+    <h2>Random Film</h2>
+    <button onclick="getRandomFilm()">Get Random Film</button>
+    <div id="filmInfo" class="recipe-container"></div>
+
+    <script>
+        function getWeather() {
+            const apiKey = '612d9f5a38e49d277d1f23507e651e12';
+    const cityInput = document.getElementById('cityInput').value;
+    const apiUrl = `https://api.openweathermap.org/data/2.5/weather?q=${cityInput}&appid=${apiKey}`;
+
+    fetch(apiUrl)
+        .then(response => response.json())
+        .then(data => {
+            // Display weather information
+            const weatherInfo = document.getElementById('weatherInfo');
+            weatherInfo.innerHTML = `
+                <h2>${data.name}, ${data.sys.country}</h2>
+                <p>Temperature: ${data.main.temp}°C</p>
+                <p>Description: ${data.weather[0].description}</p>
+                <p>Feels Like: ${data.main.feels_like}°C</p>
+                <p>Humidity: ${data.main.humidity}%</p>
+                <p>Pressure: ${data.main.pressure} hPa</p>
+                <p>Wind Speed: ${data.wind.speed} m/s</p>
+                <p>Coordinates: Lat ${data.coord.lat}, Lon ${data.coord.lon}</p>
+                <p>Rain Volume (last 3 hours): ${data.rain ? data.rain['3h'] || 0 : 0} mm</p>
+            `;
+
+            // Display map
+            const map = document.getElementById('map');
+            map.innerHTML = `<iframe width="100%" height="300" frameborder="0" style="border:0" 
+                src="https://www.google.com/maps/embed/v1/place?key=${apiKey}&q=${data.coord.lat},${data.coord.lon}" allowfullscreen></iframe>`;
+        })
+        .catch(error => {
+            console.error('Error fetching weather data:', error);
+            const weatherInfo = document.getElementById('weatherInfo');
+            weatherInfo.innerHTML = '<p>Error fetching weather data. Please try again.</p>';
+        });
+        }
+
+        function getRandomRecipe() {
+            const apiKey = '9b9ade7deb7641aaac4e7811ad507044';
+    const recipeUrl = `https://api.spoonacular.com/recipes/random?apiKey=${apiKey}`;
+
+    fetch(recipeUrl)
+        .then(response => response.json())
+        .then(data => {
+            const recipeInfo = document.getElementById('recipeInfo');
+            const recipe = data.recipes[0];
+
+            recipeInfo.innerHTML = `
+                <h3>${recipe.title}</h3>
+                <img src="${recipe.image}" alt="${recipe.title}" style="max-width: 100%;">
+                <p>${recipe.summary}</p>
+                <p>Instructions: ${recipe.instructions}</p>
+                <p>Ready in ${recipe.readyInMinutes} minutes</p>
+            `;
+        })
+        .catch(error => {
+            console.error('Error fetching recipe data:', error);
+            const recipeInfo = document.getElementById('recipeInfo');
+            recipeInfo.innerHTML = '<p>Error fetching recipe data. Please try again.</p>';
+        });
+        }
+
+        function getRandomFilm() {
+            const tmdbApiKey = '635bd328db4478576af905fe87c62a84';
+            const tmdbUrl = `https://api.themoviedb.org/3/discover/movie?api_key=${tmdbApiKey}&language=en-US&sort_by=popularity.desc&include_adult=false&page=1`;
+
+            fetch(tmdbUrl)
+                .then(response => response.json())
+                .then(data => {
+                    const randomFilm = data.results[Math.floor(Math.random() * data.results.length)];
+                    const filmInfo = document.getElementById('filmInfo');
+                    filmInfo.innerHTML = `
+                        <div class="film-card">
+                            <h3>${randomFilm.title}</h3>
+                            <img src="https://image.tmdb.org/t/p/w500/${randomFilm.poster_path}" alt="${randomFilm.title}">
+                            <p>${randomFilm.overview}</p>
+                            <p>Release Date: ${randomFilm.release_date}</p>
+                            <p>Popularity: ${randomFilm.popularity}</p>
+                        </div>
+                    `;
+                })
+                .catch(error => {
+                    console.error('Error fetching film data:', error);
+                    const filmInfo = document.getElementById('filmInfo');
+                    filmInfo.innerHTML = '<p>Error fetching film data. Please try again.</p>';
+                });
+        }
+    </script>
+</body>
+</html>
